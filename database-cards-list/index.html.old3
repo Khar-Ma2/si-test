@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Tools</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --c  :var(--b3-theme-on-background,#1e293b);
+  --m  :var(--b3-theme-on-surface-2,#64748b);
+  --d  :var(--b3-theme-on-surface-3,#94a3b8);
+  --bg :var(--b3-theme-surface,#f8fafc);
+  --bg2:var(--b3-theme-surface-1,#f1f5f9);
+  --bd :var(--b3-border-color,#e2e8f0);
+  --cbg:var(--b3-theme-background,#ffffff);
+  --acc:#5f8bff;
+  --acc-bg:#eff6ff;--acc-bd:#bfdbfe;--acc-c:#1d4ed8;
+  --r:8px;
+  --f:system-ui,-apple-system,sans-serif;
+  --gc:3;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --c:#e2e8f0;--m:#94a3b8;--d:#64748b;
+    --bg:#1e293b;--bg2:#273549;--bd:#334155;
+    --cbg:#1e293b;
+    --acc-bg:#1e3a5f;--acc-bd:#1d4ed8;--acc-c:#93c5fd;
+  }
+}
+html,body{background:transparent;font-family:var(--f);font-size:13px;color:var(--c);overflow-x:hidden}
+
+/* ── filter bar ── */
+#bar{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);padding:8px 10px;margin-bottom:8px;display:flex;flex-direction:column;gap:6px}
+.frow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.frow-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--m);white-space:nowrap;min-width:52px}
+.pills{display:flex;flex-wrap:wrap;gap:4px;flex:1}
+.pill{
+  border-radius:20px;font-size:11px;font-weight:500;padding:2px 9px;cursor:pointer;
+  border:1px solid var(--bd);background:var(--bg2);color:var(--m);
+  transition:all .13s;user-select:none;
+}
+.pill:hover{border-color:var(--acc);color:var(--acc)}
+.pill.on{border-color:var(--acc);background:var(--acc-bg);color:var(--acc-c);font-weight:600}
+
+/* ── slider row ── */
+#srow{display:flex;align-items:center;gap:8px;padding:2px 0}
+#srow label{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--m);white-space:nowrap}
+#cols-range{flex:1;max-width:160px;cursor:pointer;accent-color:var(--acc)}
+#cols-val{font-size:12px;color:var(--acc);font-weight:700;min-width:10px}
+#cnt{margin-left:auto;font-size:11px;color:var(--d)}
+.gear{background:none;border:1px solid var(--bd);border-radius:5px;color:var(--m);font-size:12px;padding:2px 7px;cursor:pointer;transition:all .13s}
+.gear:hover{border-color:var(--acc);color:var(--acc)}
+
+/* ── status ── */
+#st{font-size:11px;color:var(--d);padding:2px 0 5px;display:flex;gap:5px;align-items:center;min-height:20px}
+.dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.dot.sp{background:var(--acc);animation:bl .7s infinite}
+.dot.ok{background:#16a34a}.dot.er{background:#dc2626}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.15}}
+#eb{background:#fee2e2;border:1px solid #fca5a5;border-radius:var(--r);color:#b91c1c;font-size:11px;padding:8px 12px;margin-bottom:8px;display:none;white-space:pre-wrap}
+
+/* ── grid ── */
+#grid{display:grid;gap:8px;grid-template-columns:repeat(var(--gc),minmax(0,1fr))}
+@media(max-width:480px){#grid{grid-template-columns:1fr!important}}
+
+/* ══════════════ CARD ══════════════ */
+.card{
+  background:var(--cbg);border:1px solid var(--bd);border-radius:var(--r);
+  display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 1px 3px rgba(0,0,0,.05);
+  animation:fu .2s ease backwards;
+  transition:border-color .16s,box-shadow .16s;
+}
+.card:hover{border-color:var(--acc);box-shadow:0 3px 12px rgba(95,139,255,.1)}
+@keyframes fu{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* stripe */
+.cstr{height:2px;flex-shrink:0}
+
+/* header */
+.ch{display:flex;align-items:flex-start;gap:8px;padding:8px 10px 6px}
+.clogo{
+  flex-shrink:0;width:32px;height:32px;border-radius:6px;
+  background:var(--bg2);border:1px solid var(--bd);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;color:var(--m);overflow:hidden;
+}
+.clogo img{width:100%;height:100%;object-fit:contain}
+.chtxt{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.ctitle{font-size:13px;font-weight:700;line-height:1.25;color:var(--c);text-decoration:none;display:block;word-break:break-word}
+.ctitle:hover{color:var(--acc)}
+.cstatus{display:flex;gap:3px;flex-wrap:wrap;margin-top:1px}
+
+/* params grid */
+.cparams{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(90px,1fr));
+  gap:0;
+  border-top:1px solid var(--bd);
+}
+.cparam{padding:4px 10px;border-right:1px solid var(--bd)}
+.cparam:last-child{border-right:none}
+.cpk{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--m);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cpv{display:flex;flex-wrap:wrap;gap:2px}
+
+/* url */
+.curl{padding:4px 10px;border-top:1px solid var(--bd)}
+.curl a{font-size:11px;color:var(--acc);text-decoration:none;display:flex;align-items:center;gap:4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.curl a:hover{text-decoration:underline}
+.curl a::before{content:'🔗';font-size:10px;flex-shrink:0}
+
+/* text fields */
+.ctexts{border-top:1px solid var(--bd);padding:5px 10px;display:flex;flex-direction:column;gap:3px}
+.ctf{font-size:11px;line-height:1.45;color:var(--c)}
+.ctf-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--m);margin-bottom:1px}
+.ctf.em{color:var(--d);font-style:italic}
+
+/* chips */
+.ch-opt{
+  border-radius:4px;font-size:10px;font-weight:500;padding:1px 6px;
+  display:inline-block;border:1px solid var(--bd);
+  background:var(--bg2);color:var(--m);
+}
+
+/* config modal */
+#cfg{position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:9999;padding:12px}
+#cfg.open{display:flex}
+#cbox{background:var(--cbg);border:1px solid var(--bd);border-radius:10px;padding:16px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:10px}
+#cbox h3{font-size:13px;font-weight:700}
+#cbox label{font-size:11px;color:var(--m);display:block;margin-bottom:3px}
+#cbox input{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:5px;color:var(--c);font:inherit;font-size:12px;padding:5px 8px;outline:none}
+#cbox input:focus{border-color:var(--acc)}
+.cbtn{display:flex;gap:6px;justify-content:flex-end}
+.btn{display:inline-flex;align-items:center;gap:4px;cursor:pointer;background:var(--bg);border:1px solid var(--bd);border-radius:5px;color:var(--c);font:inherit;font-size:12px;padding:4px 12px;transition:all .13s}
+.btn:hover{border-color:var(--acc);color:var(--acc)}
+.btn.p{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+.btn.p:hover{opacity:.88}
+
+/* skeleton */
+.sk{background:var(--cbg);border:1px solid var(--bd);border-radius:var(--r);padding:10px;display:flex;flex-direction:column;gap:6px}
+.sl{border-radius:3px;background:linear-gradient(90deg,var(--bg) 25%,var(--bg2) 50%,var(--bg) 75%);background-size:300% 100%;animation:sh 1.2s infinite}
+@keyframes sh{from{background-position:200%}to{background-position:-200%}}
+</style>
+</head>
+<body>
+
+<div id="bar">
+  <div class="frow" id="frow-type">
+    <span class="frow-lbl">Тип</span>
+    <div class="pills" id="pills-type"></div>
+  </div>
+  <div class="frow" id="frow-profile">
+    <span class="frow-lbl">Профіль</span>
+    <div class="pills" id="pills-profile"></div>
+  </div>
+  <div id="srow">
+    <label for="cols-range">Колонки</label>
+    <input type="range" id="cols-range" min="1" max="5" value="3">
+    <span id="cols-val">3</span>
+    <span id="cnt"></span>
+    <button class="gear" id="gear-btn">⚙</button>
+  </div>
+</div>
+
+<div id="st"><span class="dot sp" id="sdot"></span><span id="smsg">Ініціалізація…</span></div>
+<div id="eb"></div>
+<div id="grid"></div>
+
+<!-- CONFIG MODAL -->
+<div id="cfg">
+  <div id="cbox">
+    <h3>⚙ Налаштування</h3>
+    <div>
+      <label>Database ID</label>
+      <input id="ci" type="text" placeholder="20260321102432-xxxxxxx">
+    </div>
+    <div>
+      <label>API URL</label>
+      <input id="ca" type="text" value="http://127.0.0.1:6806">
+    </div>
+    <div>
+      <label>Token (якщо є)</label>
+      <input id="ct" type="password" placeholder="зазвичай порожньо">
+    </div>
+    <div class="cbtn">
+      <button class="btn" id="ccancel">Скасувати</button>
+      <button class="btn p" id="csave">✓ Зберегти</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── SiYuan option color index → CSS ── */
+var CLR=[
+  {bg:'var(--bg2)',bd:'var(--bd)',c:'var(--m)'},  // 0 default
+  {bg:'#fef2f2',bd:'#fecaca',c:'#dc2626'},         // 1 red
+  {bg:'#fff7ed',bd:'#fed7aa',c:'#ea580c'},         // 2 orange
+  {bg:'#fefce8',bd:'#fef08a',c:'#ca8a04'},         // 3 yellow
+  {bg:'#f0fdf4',bd:'#bbf7d0',c:'#16a34a'},         // 4 green
+  {bg:'#eff6ff',bd:'#bfdbfe',c:'#2563eb'},         // 5 blue
+  {bg:'#f5f3ff',bd:'#ddd6fe',c:'#7c3aed'},         // 6 purple
+  {bg:'#fdf2f8',bd:'#fbcfe8',c:'#be185d'},         // 7 pink
+  {bg:'#f1f5f9',bd:'#cbd5e1',c:'#475569'},         // 8 gray
+  {bg:'#1e293b',bd:'#475569',c:'#f1f5f9'},         // 9 black
+  {bg:'#fef3c7',bd:'#fde68a',c:'#92400e'},         // 10 brown
+  {bg:'#ecfdf5',bd:'#a7f3d0',c:'#065f46'},         // 11 teal
+  {bg:'#f0fdf4',bd:'#d9f99d',c:'#3f6212'},         // 12 lime
+  {bg:'#fff1f2',bd:'#fecdd3',c:'#be123c'},         // 13 rose
+];
+
+function clrStyle(colorVal){
+  if(colorVal==null)return CLR[0];
+  var n=parseInt(colorVal,10);
+  if(!isNaN(n)&&CLR[n])return CLR[n];
+  // named fallback
+  var map={red:1,orange:2,yellow:3,green:4,blue:5,purple:6,pink:7,gray:8,black:9,brown:10,teal:11,lime:12,rose:13};
+  return CLR[map[String(colorVal).toLowerCase()]||0];
+}
+
+/* ── helpers ── */
+var KEY='ait_'+location.pathname.replace(/\W/g,'_').slice(-18);
+function ss(o){var s=JSON.stringify(o);try{localStorage.setItem(KEY,s)}catch(e){}try{sessionStorage.setItem(KEY,s)}catch(e){}}
+function sl(){try{var v=localStorage.getItem(KEY)||sessionStorage.getItem(KEY);return v?JSON.parse(v):null}catch(e){return null}}
+function $(id){return document.getElementById(id)}
+function esc(s){return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function setSt(cls,msg){$('sdot').className='dot '+cls;$('smsg').textContent=msg}
+function autoH(){
+  var h=Math.max(document.body.scrollHeight,80);
+  try{if(window.frameElement)window.frameElement.style.height=h+'px'}catch(e){}
+  try{window.parent.postMessage({type:'siyuan-set-widget-height',height:h+'px'},'*')}catch(e){}
+}
+
+/* ── state ── */
+var CFG=null, avCols=[], allRows=[];
+var activeType=[], activeProfile=[];
+var optMapType={}, optMapProfile={};  // name→color
+
+/* ── field finders (by name, case-insensitive) ── */
+function findCol(names){
+  var nl=names.map(function(n){return n.toLowerCase()});
+  for(var i=0;i<avCols.length;i++){
+    if(nl.indexOf(avCols[i].name.toLowerCase())>-1)return avCols[i];
+  }return null;
+}
+var F={};  // resolved column refs
+
+/* ── API ── */
+function mkH(){
+  var h={'Content-Type':'application/json'};
+  var t=CFG&&CFG.token||'';if(t)h['Authorization']='Token '+t;return h;
+}
+function getApi(){return(CFG&&CFG.api||'http://127.0.0.1:6806').replace(/\/$/,'')}
+
+/* ── parse cell raw value ── */
+function cellRaw(c){
+  if(c==null)return null;
+  var v=c.value!=null?c.value:c;
+  if(v.block&&v.block.content!=null)return{bc:v.block.content,bid:v.block.id};
+  if(v.url&&v.url.content!=null)return v.url.content;
+  if(v.text&&v.text.content!=null)return v.text.content;
+  if(v.number&&v.number.content!=null)return v.number.content;
+  if(v.select&&v.select.content!=null)return v.select.content;
+  if(Array.isArray(v.mSelect))return v.mSelect.map(function(m){return m.content||m}).filter(Boolean);
+  if(typeof v==='string'||typeof v==='number'||typeof v==='boolean')return v;
+  return null;
+}
+function txt(r){if(r==null)return'';if(typeof r==='object'&&r.bc)return r.bc;if(Array.isArray(r))return r.join(' ');return String(r)}
+
+/* ── parse AV response ── */
+function parseAV(d){
+  var v=d&&d.view?d.view:d;
+  var rawCols=v.columns||v.table&&v.table.columns||v.layout&&v.layout.columns||[];
+  var cols=rawCols.map(function(c){
+    var opts=(c.options||[]).map(function(o){return{name:o.name||String(o),color:o.color}});
+    return{id:c.id,name:c.name||'',type:c.type||'text',options:opts};
+  });
+  var rows=v.rows||v.table&&v.table.rows||[];
+  return{cols:cols,rows:rows};
+}
+
+/* ── build option color map ── */
+function buildOptMap(col){
+  var m={};
+  if(!col)return m;
+  (col.options||[]).forEach(function(o){m[o.name]=clrStyle(o.color)});
+  return m;
+}
+
+/* ── build filter pills ── */
+function buildPills(containerId, col, activeArr, optMap){
+  var el=$(containerId);el.innerHTML='';
+  if(!col)return;
+  function mkPill(lbl,val){
+    var b=document.createElement('button');
+    b.className='pill'+(activeArr.indexOf(val)>-1?' on':'');
+    b.textContent=lbl;b.dataset.v=val;
+    // color the pill if it has an option color
+    if(optMap[val]){
+      var clr=optMap[val];
+      if(activeArr.indexOf(val)>-1){
+        b.style.background=clr.bg;b.style.borderColor=clr.bd;b.style.color=clr.c;
+      }
+    }
+    b.onclick=function(){
+      var i=activeArr.indexOf(val);
+      if(i>-1)activeArr.splice(i,1);else activeArr.push(val);
+      buildPills(containerId,col,activeArr,optMap);
+      render();
+    };
+    return b;
+  }
+  col.options.forEach(function(o){el.appendChild(mkPill(o.name,o.name))});
+}
+
+/* ── chip HTML ── */
+function chipHtml(val,optMap){
+  var clr=optMap&&optMap[val]?optMap[val]:CLR[0];
+  return'<span class="ch-opt" style="background:'+clr.bg+';border-color:'+clr.bd+';color:'+clr.c+'">'+esc(val)+'</span>';
+}
+
+/* ── render chips for a cell ── */
+function renderChips(raw,optMap){
+  if(raw==null||raw===''||(Array.isArray(raw)&&!raw.length))
+    return'<span style="font-size:10px;color:var(--d)">—</span>';
+  var items=Array.isArray(raw)?raw:[txt(raw)];
+  return items.map(function(v){return chipHtml(String(v),optMap||{})}).join('');
+}
+
+/* ── stripe color from Pricing/Checked ── */
+function stripeColor(row){
+  var pRaw=F.pricing?txt(gc(row,F.pricing.id)):'';
+  var l=pRaw.toLowerCase();
+  return l==='free'?'#16a34a':l==='freemium'?'#d97706':l==='paid'?'#dc2626':'transparent';
+}
+
+function gc(row,id){return row._c&&row._c[id]!=null?row._c[id]:null}
+
+/* ── RENDER GRID ── */
+function render(){
+  var rows=allRows.filter(function(row){
+    // Type filter (OR within selection)
+    if(activeType.length){
+      var v=gc(row,F.type?F.type.id:'');
+      var vals=Array.isArray(v)?v:[txt(v)];
+      var hit=activeType.some(function(t){return vals.some(function(rv){return String(rv).toLowerCase()===t.toLowerCase()})});
+      if(!hit)return false;
+    }
+    // Profile filter
+    if(activeProfile.length){
+      var v2=gc(row,F.profile?F.profile.id:'');
+      var vals2=Array.isArray(v2)?v2:[txt(v2)];
+      var hit2=activeProfile.some(function(t){return vals2.some(function(rv){return String(rv).toLowerCase()===t.toLowerCase()})});
+      if(!hit2)return false;
+    }
+    return true;
+  });
+
+  $('cnt').textContent=rows.length+' / '+allRows.length;
+
+  if(!rows.length){
+    $('grid').innerHTML='<div style="color:var(--d);font-size:12px;padding:16px 0">Нічого не знайдено</div>';
+    autoH();return;
+  }
+
+  // build option maps needed for params
+  var optMaps={};
+  ['type','ai','pricing','checked','profile'].forEach(function(k){
+    if(F[k])optMaps[k]=buildOptMap(F[k]);
+  });
+
+  $('grid').innerHTML=rows.map(function(row,i){
+    /* primary / title */
+    var pRaw=F.primary?gc(row,F.primary.id):null;
+    var pText=txt(pRaw)||'(без назви)';
+    var pLink=(typeof pRaw==='object'&&pRaw&&pRaw.bid)?'siyuan://blocks/'+pRaw.bid:null;
+    var titleHtml=pLink
+      ?'<a class="ctitle" href="'+esc(pLink)+'">'+esc(pText)+'</a>'
+      :'<span class="ctitle">'+esc(pText)+'</span>';
+
+    /* logo */
+    var logoUrl=F.logo?txt(gc(row,F.logo.id)):'';
+    var initials=esc((pText[0]||'?').toUpperCase());
+    var logoHtml=logoUrl
+      ?'<img src="'+esc(logoUrl)+'" alt="" loading="lazy" onerror="this.parentNode.innerHTML=\'<span>'+initials+'</span>\'">'
+      :'<span>'+initials+'</span>';
+
+    /* status chips in header (Checked) */
+    var statusHtml='';
+    if(F.checked){
+      var chRaw=gc(row,F.checked.id);
+      if(chRaw!=null&&chRaw!==''){
+        var items=Array.isArray(chRaw)?chRaw:[txt(chRaw)];
+        statusHtml=items.map(function(v){return chipHtml(String(v),optMaps.checked||{})}).join('');
+      }
+    }
+
+    /* params grid — Type, AI, Pricing */
+    var params=[];
+    if(F.type)params.push({label:'Тип',raw:gc(row,F.type.id),om:optMaps.type});
+    if(F.ai)params.push({label:'AI',raw:gc(row,F.ai.id),om:optMaps.ai});
+    if(F.pricing)params.push({label:'Ціна',raw:gc(row,F.pricing.id),om:optMaps.pricing});
+    var paramsHtml='';
+    if(params.length){
+      paramsHtml='<div class="cparams">';
+      params.forEach(function(p){
+        paramsHtml+='<div class="cparam"><div class="cpk">'+esc(p.label)+'</div><div class="cpv">'+renderChips(p.raw,p.om)+'</div></div>';
+      });
+      paramsHtml+='</div>';
+    }
+
+    /* url */
+    var urlHtml='';
+    if(F.url){
+      var urlRaw=txt(gc(row,F.url.id));
+      if(urlRaw){
+        var urlDisp=urlRaw.replace(/^https?:\/\/(www\.)?/,'').replace(/\/$/,'');
+        urlHtml='<div class="curl"><a href="'+esc(urlRaw)+'" target="_blank" rel="noopener">'+esc(urlDisp)+'</a></div>';
+      }
+    }
+
+    /* text fields */
+    var textsHtml='';
+    var hasTexts=false;
+    var textsBuf='';
+    if(F.desc){
+      var dv=txt(gc(row,F.desc.id));
+      if(dv){hasTexts=true;textsBuf+='<div class="ctf"><div class="ctf-lbl">Опис</div>'+esc(dv)+'</div>';}
+    }
+    if(F.features){
+      var fv=txt(gc(row,F.features.id));
+      if(fv){hasTexts=true;textsBuf+='<div class="ctf"><div class="ctf-lbl">Особливості</div>'+esc(fv)+'</div>';}
+    }
+    if(hasTexts)textsHtml='<div class="ctexts">'+textsBuf+'</div>';
+
+    var stripe=stripeColor(row);
+
+    return'<div class="card" style="animation-delay:'+(i*12)+'ms">'+
+      '<div class="cstr" style="background:'+stripe+'"></div>'+
+      '<div class="ch">'+
+        '<div class="clogo">'+logoHtml+'</div>'+
+        '<div class="chtxt">'+titleHtml+
+          (statusHtml?'<div class="cstatus">'+statusHtml+'</div>':'')+
+        '</div>'+
+      '</div>'+
+      paramsHtml+
+      urlHtml+
+      textsHtml+
+      '</div>';
+  }).join('');
+
+  autoH();
+}
+
+/* ── skeleton ── */
+function showSkel(n){
+  var gc=parseInt($('cols-range').value)||3;
+  var h='';
+  for(var i=0;i<Math.max(n,gc);i++)
+    h+='<div class="sk">'+
+      '<div style="display:flex;gap:8px;align-items:center">'+
+        '<div class="sl" style="width:32px;height:32px;border-radius:6px;flex-shrink:0"></div>'+
+        '<div style="flex:1;display:flex;flex-direction:column;gap:4px">'+
+          '<div class="sl" style="height:12px;width:60%"></div>'+
+          '<div class="sl" style="height:9px;width:35%"></div>'+
+        '</div></div>'+
+      '<div style="display:flex;gap:4px;margin-top:4px">'+
+        '<div class="sl" style="height:9px;flex:1"></div>'+
+        '<div class="sl" style="height:9px;flex:1"></div>'+
+        '<div class="sl" style="height:9px;flex:1"></div>'+
+      '</div>'+
+      '<div class="sl" style="height:9px;margin-top:4px;width:55%"></div>'+
+      '</div>';
+  $('grid').innerHTML=h;
+}
+
+/* ── LOAD ── */
+function loadData(){
+  if(!CFG||!CFG.avid)return;
+  setSt('sp','Завантаження…');
+  showSkel(parseInt($('cols-range').value)||3);
+  $('eb').style.display='none';
+
+  fetch(getApi()+'/api/av/renderAttributeView',{
+    method:'POST',headers:mkH(),
+    body:JSON.stringify({id:CFG.avid,viewID:''})
+  })
+  .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
+  .then(function(j){
+    if(j.code!==0)throw new Error(j.msg||'code '+j.code);
+    var p=parseAV(j.data);
+    avCols=p.cols;
+
+    // map fields by name
+    F.primary =findCol(['primary key','title','name','назва']);
+    F.type    =findCol(['type','тип']);
+    F.ai      =findCol(['ai']);
+    F.pricing =findCol(['pricing','ціна','price']);
+    F.checked =findCol(['checked','статус','status']);
+    F.profile =findCol(['profile','профіль']);
+    F.desc    =findCol(['short description','description','опис']);
+    F.features=findCol(['unique features','features','особливості']);
+    F.url     =findCol(['url','посилання','link']);
+    F.logo    =findCol(['logo url','logo','лого']);
+
+    // build option maps for filters
+    optMapType   =buildOptMap(F.type);
+    optMapProfile=buildOptMap(F.profile);
+
+    // parse rows
+    allRows=p.rows.map(function(row){
+      var o={_id:row.id,_c:{}};
+      avCols.forEach(function(col,i){
+        var cell=Array.isArray(row.cells)?row.cells[i]:(row.cells&&row.cells[col.id]!=null?row.cells[col.id]:null);
+        o._c[col.id]=cellRaw(cell);
+      });
+      return o;
+    });
+
+    // build filter pills
+    buildPills('pills-type',   F.type,    activeType,    optMapType);
+    buildPills('pills-profile',F.profile, activeProfile, optMapProfile);
+
+    render();
+    setSt('ok',allRows.length+' інструментів');
+  })
+  .catch(function(e){
+    $('grid').innerHTML='';
+    $('eb').textContent='⚠ '+e.message+'\n\nПеревір Database ID та чи запущений SiYuan.';
+    $('eb').style.display='block';
+    setSt('er','Помилка');
+    autoH();
+  });
+}
+
+/* ── columns slider ── */
+$('cols-range').oninput=function(){
+  var v=this.value;
+  $('cols-val').textContent=v;
+  $('grid').style.setProperty('--gc',v);
+  autoH();
+};
+
+/* ── config modal ── */
+$('gear-btn').onclick=function(){
+  $('ci').value=CFG&&CFG.avid||'';
+  $('ca').value=CFG&&CFG.api||'http://127.0.0.1:6806';
+  $('ct').value=CFG&&CFG.token||'';
+  $('cfg').classList.add('open');autoH();
+};
+$('ccancel').onclick=function(){$('cfg').classList.remove('open');autoH()};
+$('cfg').onclick=function(e){if(e.target===$('cfg'))$('cfg').classList.remove('open')};
+$('csave').onclick=function(){
+  var avid=$('ci').value.trim();
+  if(!avid){alert('Введи Database ID');return}
+  CFG={avid:avid,api:$('ca').value.trim()||'http://127.0.0.1:6806',token:$('ct').value.trim()};
+  ss(CFG);
+  $('cfg').classList.remove('open');
+  activeType=[];activeProfile=[];
+  loadData();
+};
+
+/* ── init ── */
+if(window.ResizeObserver)new ResizeObserver(autoH).observe(document.body);
+
+(function(){
+  CFG=sl();
+  if(CFG&&CFG.avid){loadData()}
+  else{
+    setSt('','Натисни ⚙ щоб вказати Database ID');
+    $('sdot').className='dot';
+    setTimeout(function(){$('gear-btn').click()},200);
+  }
+})();
+</script>
+</body>
+</html>

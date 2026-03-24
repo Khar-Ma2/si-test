@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AV Cards</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  /* SiYuan передає --b3-* змінні в iframe — беремо їх напряму */
+  --c  : var(--b3-theme-on-background,  #e2e8f0);
+  --m  : var(--b3-theme-on-surface-2,   rgba(226,232,240,.45));
+  --d  : var(--b3-theme-on-surface-3,   rgba(226,232,240,.25));
+  --bg : var(--b3-theme-surface,        rgba(255,255,255,.06));
+  --bg2: var(--b3-theme-surface-1,      rgba(255,255,255,.1));
+  --bd : var(--b3-border-color,         rgba(255,255,255,.12));
+  --acc:#5f8bff;--ok:#34d399;--err:#f87171;--wrn:#fbbf24;
+  --r:7px;--f:system-ui,-apple-system,sans-serif;--fm:ui-monospace,'Cascadia Code',monospace;
+}
+html,body{background:transparent;font-family:var(--f);font-size:13px;color:var(--c);overflow-x:hidden}
+input,select{background:var(--bg);border:1px solid var(--bd);border-radius:5px;color:var(--c);font:inherit;padding:5px 8px;outline:none;transition:border-color .15s}
+input:focus,select:focus{border-color:var(--acc)}
+input[type=range]{padding:0;border:none;background:transparent;cursor:pointer;accent-color:var(--acc)}
+input::placeholder{color:var(--d)}
+select option{background:var(--b3-theme-background,#1a1e2e)}
+label{font-size:11px;color:var(--m);display:block;margin-bottom:3px}
+.btn{display:inline-flex;align-items:center;gap:5px;cursor:pointer;background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);color:var(--c);font:inherit;font-size:12px;padding:5px 11px;transition:all .15s;white-space:nowrap}
+.btn:hover{border-color:var(--acc);color:var(--acc)}
+.btn.p{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:700}
+.btn.p:hover{background:#7aa5ff}
+.btn.sm{font-size:11px;padding:3px 9px;border-radius:5px}
+.btn.ic{padding:4px 8px}
+/* topbar */
+#topbar{display:flex;align-items:center;gap:8px;padding:0 0 8px;flex-wrap:wrap}
+#ttl{font-size:12px;font-weight:700;color:var(--m);letter-spacing:.04em;flex:1}
+#srch{width:140px;border-radius:20px;padding:3px 11px;font-size:12px;transition:width .3s}
+#srch:focus{width:190px}
+#cnt{font-size:11px;color:var(--d);white-space:nowrap}
+/* pills */
+#pills{display:flex;gap:5px;flex-wrap:wrap;padding:0 0 8px}
+.pill{background:var(--bg);border:1px solid var(--bd);border-radius:20px;color:var(--m);cursor:pointer;font-size:11px;padding:2px 10px;transition:all .14s;user-select:none}
+.pill.on{border-color:var(--acc);color:var(--acc);background:rgba(95,139,255,.1)}
+/* status */
+#st{font-size:11px;color:var(--d);padding:3px 0 7px;display:flex;gap:5px;align-items:center;min-height:24px}
+.dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;background:var(--d)}
+.dot.ok{background:var(--ok);box-shadow:0 0 5px var(--ok)}
+.dot.err{background:var(--err);box-shadow:0 0 5px var(--err)}
+.dot.sp{background:var(--acc);animation:bl .7s infinite}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.1}}
+/* errbox */
+#errbox{background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.2);border-radius:var(--r);color:var(--err);font:11px var(--fm);padding:9px 13px;white-space:pre-wrap;margin-bottom:8px;display:none}
+/* grid */
+#grid{display:grid;gap:10px;grid-template-columns:repeat(var(--gc,3),minmax(0,1fr))}
+@media(max-width:520px){#grid{grid-template-columns:1fr!important}}
+/* card */
+.card{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column;animation:fu .2s ease backwards;transition:border-color .18s,background .18s}
+@keyframes fu{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.card:hover{border-color:rgba(95,139,255,.32);background:var(--bg2)}
+.cst{height:3px}
+.ch{display:flex;align-items:flex-start;gap:9px;padding:10px 12px 8px}
+.clo{flex-shrink:0;width:32px;height:32px;border-radius:6px;background:var(--bg2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:15px;overflow:hidden}
+.clo img{width:100%;height:100%;object-fit:contain}
+.ctit{font-size:14px;font-weight:700;line-height:1.25;flex:1;word-break:break-word}
+.ctit a{color:inherit;text-decoration:none}
+.ctit a:hover{color:var(--acc)}
+.cbg{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.chip{border-radius:20px;font-size:10px;font-weight:600;padding:1px 8px;background:rgba(95,139,255,.12);border:1px solid rgba(95,139,255,.28);color:#93c5fd}
+.chip.ok{background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.3);color:#34d399}
+.chip.wrn{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.3);color:#fbbf24}
+.chip.bad{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.3);color:#f87171}
+.cb{padding:4px 12px 11px;display:flex;flex-direction:column;gap:5px;flex:1}
+.fr{display:grid;grid-template-columns:var(--lw,80px) 1fr;gap:5px;align-items:baseline}
+.fk{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--m);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fv{font-size:12px;line-height:1.4;word-break:break-word}
+.fv.em{color:var(--d);font-style:italic}
+.fv a{color:var(--acc);text-decoration:none}.fv a:hover{text-decoration:underline}
+.fv.nu{color:#7dd3fc;font-family:var(--fm)}
+.fv.dt{color:#c4b5fd}
+.fvt{display:flex;flex-wrap:wrap;gap:3px}
+.fvtg{background:rgba(95,139,255,.1);border:1px solid rgba(95,139,255,.22);border-radius:20px;color:#93c5fd;font-size:10px;padding:1px 7px}
+/* skeleton */
+.sk{background:var(--bg);border:1px solid var(--bd);border-radius:var(--r);padding:12px;display:flex;flex-direction:column;gap:8px}
+.sl{border-radius:3px;background:linear-gradient(90deg,var(--bg) 25%,var(--bg2) 50%,var(--bg) 75%);background-size:300% 100%;animation:sh 1.2s infinite}
+@keyframes sh{from{background-position:200%}to{background-position:-200%}}
+/* overlay */
+#ov{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);display:none;align-items:flex-start;justify-content:center;padding:10px;z-index:9999;overflow-y:auto}
+#ov.open{display:flex}
+#box{background:var(--b3-theme-background,#141720);border:1px solid var(--bd);border-radius:10px;padding:16px;width:100%;max-width:520px;display:flex;flex-direction:column;gap:13px;margin:auto}
+.sh{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--m);padding-bottom:5px;border-bottom:1px solid var(--bd);margin-bottom:7px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+#flist{display:flex;flex-direction:column;gap:4px}
+.fi{display:grid;grid-template-columns:1fr 68px 52px 26px 26px;gap:4px;align-items:center;background:var(--bg);border:1px solid var(--bd);border-radius:5px;padding:5px 7px}
+.fi-n{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fi select{padding:3px 4px;font-size:11px}
+.tog{cursor:pointer;font-size:13px;text-align:center;opacity:.25;transition:opacity .12s;user-select:none}
+.tog.on{opacity:1}
+.rule{display:flex;gap:5px;align-items:center;background:var(--bg);border:1px solid var(--bd);border-radius:5px;padding:4px 7px;margin-bottom:4px}
+.rule select,.rule input{flex:1;padding:3px 5px;font-size:11px}
+.rule .x{flex-shrink:0;cursor:pointer;color:var(--err);font-size:14px;opacity:.45;padding:0 3px}
+.rule .x:hover{opacity:1}
+.rr{display:flex;align-items:center;gap:8px}
+.rr input[type=range]{flex:1}
+.rv{font-size:12px;color:var(--acc);font-weight:700;min-width:14px}
+.cnav{display:flex;gap:8px;justify-content:flex-end;padding-top:10px;border-top:1px solid var(--bd)}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <span id="ttl">AV Cards</span>
+  <input id="srch" type="text" placeholder="пошук…" autocomplete="off">
+  <span id="cnt"></span>
+  <button class="btn ic sm" id="btnCfg">⚙</button>
+</div>
+<div id="pills"></div>
+<div id="st"><span class="dot sp" id="sdot"></span><span id="smsg">Ініціалізація…</span></div>
+<div id="errbox"></div>
+<div id="grid"></div>
+
+<div id="ov">
+<div id="box">
+  <div style="display:flex;align-items:center;gap:8px">
+    <b style="flex:1;font-size:14px">⚙ Налаштування</b>
+    <button class="btn sm" id="btnClose">✕</button>
+  </div>
+  <div>
+    <div class="sh">База даних</div>
+    <div class="g2" style="margin-bottom:8px">
+      <div>
+        <label>Database ID</label>
+        <div style="display:flex;gap:5px">
+          <input id="cId" type="text" placeholder="20260321102432-…" style="flex:1">
+          <button class="btn sm p" id="btnFetch">↓ Колонки</button>
+        </div>
+        <div id="fst" style="font-size:11px;color:var(--d);margin-top:3px;min-height:16px"></div>
+      </div>
+      <div><label>Назва</label><input id="cTitle" type="text" placeholder="AI Tools"></div>
+    </div>
+    <div class="g2">
+      <div><label>API URL</label><input id="cApi" value="http://127.0.0.1:6806"></div>
+      <div><label>Token</label><input id="cTok" type="password" placeholder="зазвичай порожньо"></div>
+    </div>
+  </div>
+  <div>
+    <div class="sh">Поля &nbsp;<span style="color:var(--d);font-size:10px">🔑 заголовок · 🖼 логотип · ★ badge · 👁 показувати</span></div>
+    <div id="flist"><span style="color:var(--d);font-size:11px">Натисни «↓ Колонки» щоб завантажити поля</span></div>
+  </div>
+  <div>
+    <div class="sh">Вигляд</div>
+    <div class="g3">
+      <div><label>Колонок</label><div class="rr"><input type="range" id="cCols" min="1" max="5" value="3"><span class="rv" id="colsv">3</span></div></div>
+      <div><label>Підпис (px)</label><input id="cLw" type="number" value="80" min="30" max="180" style="width:70px"></div>
+      <div><label>Pill-фільтр</label><select id="cPill"><option value="">— немає —</option></select></div>
+    </div>
+  </div>
+  <div>
+    <div class="sh">Фільтри</div>
+    <div id="frules"></div>
+    <button class="btn sm" id="btnAF">+ фільтр</button>
+  </div>
+  <div>
+    <div class="sh">Сортування</div>
+    <div id="srules"></div>
+    <button class="btn sm" id="btnAS">+ сортування</button>
+  </div>
+  <div class="cnav">
+    <button class="btn sm" id="btnCancel">Скасувати</button>
+    <button class="btn p" id="btnSave">✓ Зберегти</button>
+  </div>
+</div>
+</div>
+
+<script>
+var KEY='avc_'+location.pathname.replace(/\W/g,'_').slice(-20);
+function ssave(o){var s=JSON.stringify(o);try{localStorage.setItem(KEY,s)}catch(e){}try{sessionStorage.setItem(KEY,s)}catch(e){}}
+function sload(){try{var v=localStorage.getItem(KEY)||sessionStorage.getItem(KEY);return v?JSON.parse(v):null}catch(e){return null}}
+
+var CFG=null,avCols=[],allRows=[],activePill='all',searchQ='';
+function $(id){return document.getElementById(id)}
+function esc(s){return s==null?'':String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function setSt(c,m){$('sdot').className='dot '+c;$('smsg').textContent=m}
+
+function autoH(){
+  var h=Math.max(document.body.scrollHeight,100);
+  try{if(window.frameElement)window.frameElement.style.height=h+'px'}catch(e){}
+  try{window.parent.postMessage({type:'siyuan-set-widget-height',height:h+'px'},'*')}catch(e){}
+}
+
+function mkH(){var h={'Content-Type':'application/json'},t=($('cTok').value||CFG&&CFG.token||'');if(t)h['Authorization']='Token '+t;return h}
+function getApi(){return($('cApi').value||CFG&&CFG.api||'http://127.0.0.1:6806').replace(/\/$/,'')}
+
+function parseAV(d){
+  var v=d&&d.view?d.view:d;
+  var cols=(v.columns||v.table&&v.table.columns||v.layout&&v.layout.columns||[]).map(function(c){return{id:c.id,name:c.name,type:c.type||'text'}});
+  var rows=v.rows||v.table&&v.table.rows||[];
+  return{cols:cols,rows:rows};
+}
+
+function cellRaw(c){
+  if(c==null)return null;
+  var v=c.value!=null?c.value:c;
+  if(v.text&&v.text.content!=null)return v.text.content;
+  if(v.block&&v.block.content!=null)return{bc:v.block.content,bid:v.block.id};
+  if(v.url&&v.url.content!=null)return v.url.content;
+  if(v.number&&v.number.content!=null)return v.number.content;
+  if(v.checkbox!=null)return!!(v.checkbox.checked);
+  if(v.select&&v.select.content!=null)return v.select.content;
+  if(Array.isArray(v.mSelect))return v.mSelect.map(function(m){return m.content||m}).filter(Boolean);
+  if(v.date&&v.date.content!=null)return v.date.content;
+  if(typeof v==='string'||typeof v==='number'||typeof v==='boolean')return v;
+  return null;
+}
+
+function txt(r){if(r==null)return'';if(typeof r==='object'&&r.bc)return r.bc;if(Array.isArray(r))return r.join(' ');return String(r)}
+function fmtSY(s){if(!s||s.length<8)return s;var d=s.slice(6,8)+'.'+s.slice(4,6)+'.'+s.slice(0,4);return s.length>=12?d+' '+s.slice(8,10)+':'+s.slice(10,12):d}
+
+function rCell(raw,ct,dt){
+  dt=dt||'auto';
+  if(raw==null||raw==='')return'<span class="fv em">—</span>';
+  if(typeof raw==='boolean'||ct==='checkbox')return'<span class="fv">'+(raw?'✓ Так':'✗ Ні')+'</span>';
+  if(Array.isArray(raw))return raw.length?'<div class="fvt">'+raw.map(function(v){return'<span class="fvtg">'+esc(v)+'</span>'}).join('')+'</div>':'<span class="fv em">—</span>';
+  if(typeof raw==='object'&&raw.bid)return'<a class="fv" href="siyuan://blocks/'+esc(raw.bid)+'">'+esc(raw.bc||raw.bid)+'</a>';
+  var sv=String(raw);
+  if(dt==='url'||(dt==='auto'&&/^https?:\/\//.test(sv)))return'<a class="fv" href="'+esc(sv)+'" target="_blank" rel="noopener">'+esc(sv.replace(/^https?:\/\//,''))+'</a>';
+  if(dt==='date'||(dt==='auto'&&/^\d{14}$/.test(sv)))return'<span class="fv dt">'+esc(fmtSY(sv))+'</span>';
+  if(dt==='number'||(dt==='auto'&&sv!==''&&!isNaN(parseFloat(sv))&&isFinite(sv)))return'<span class="fv nu">'+parseFloat(sv).toLocaleString('uk-UA')+'</span>';
+  return'<span class="fv">'+esc(sv)+'</span>';
+}
+
+function gc(row,id){return row._c&&row._c[id]!=null?row._c[id]:null}
+
+function applyF(rows,filters){
+  if(!filters||!filters.length)return rows;
+  return rows.filter(function(row){return filters.every(function(f){
+    var r=gc(row,f.colId),sv=txt(r).toLowerCase(),fv=(f.value||'').toLowerCase();
+    switch(f.op){
+      case'contains':return sv.indexOf(fv)>-1;case'not_contains':return sv.indexOf(fv)===-1;
+      case'eq':return sv===fv;case'neq':return sv!==fv;
+      case'starts':return sv.indexOf(fv)===0;case'ends':return sv.slice(-fv.length)===fv;
+      case'empty':return sv==='';case'not_empty':return sv!=='';
+      case'gt':return parseFloat(sv)>parseFloat(fv);case'lt':return parseFloat(sv)<parseFloat(fv);
+      case'checked':return r===true;case'unchecked':return r!==true;
+      default:return true;
+    }
+  })});
+}
+
+function applyS(rows,sorts){
+  if(!sorts||!sorts.length)return rows;
+  return rows.slice().sort(function(a,b){
+    for(var i=0;i<sorts.length;i++){
+      var s=sorts[i],ra=txt(gc(a,s.colId)),rb=txt(gc(b,s.colId));
+      var na=parseFloat(ra),nb=parseFloat(rb),cmp=(!isNaN(na)&&!isNaN(nb))?na-nb:ra.localeCompare(rb,'uk');
+      if(cmp!==0)return s.dir==='desc'?-cmp:cmp;
+    }
+    return 0;
+  });
+}
+
+function showSkel(n){var h='';for(var i=0;i<n;i++)h+='<div class="sk"><div style="display:flex;gap:8px;align-items:center"><div class="sl" style="width:32px;height:32px;border-radius:6px;flex-shrink:0"></div><div style="flex:1;display:flex;flex-direction:column;gap:5px"><div class="sl" style="height:12px;width:55%"></div><div class="sl" style="height:8px;width:30%"></div></div></div><div class="sl" style="height:9px;margin-top:4px"></div><div class="sl" style="height:9px;width:70%"></div></div>';$('grid').innerHTML=h}
+
+function loadData(){
+  if(!CFG||!CFG.avid)return;
+  setSt('sp','Завантаження…');
+  showSkel(CFG.columns||3);
+  $('errbox').style.display='none';
+  $('pills').innerHTML='';
+  $('grid').style.setProperty('--gc',CFG.columns||3);
+  $('grid').style.setProperty('--lw',(CFG.labelWidth||80)+'px');
+  $('ttl').textContent=CFG.title||'AV Cards';
+
+  fetch(getApi()+'/api/av/renderAttributeView',{method:'POST',headers:mkH(),body:JSON.stringify({id:CFG.avid,viewID:''})})
+  .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
+  .then(function(j){
+    if(j.code!==0)throw new Error(j.msg||'code '+j.code);
+    var p=parseAV(j.data);avCols=p.cols;
+    allRows=p.rows.map(function(row){
+      var o={_id:row.id,_c:{}};
+      avCols.forEach(function(col,i){
+        var cell=Array.isArray(row.cells)?row.cells[i]:(row.cells&&row.cells[col.id]!=null?row.cells[col.id]:null);
+        o._c[col.id]=cellRaw(cell);
+      });
+      return o;
+    });
+    allRows=applyF(allRows,CFG.filters);
+    allRows=applyS(allRows,CFG.sorts);
+    buildPills();render();
+    setSt('ok',allRows.length+' записів');
+  })
+  .catch(function(e){
+    $('grid').innerHTML='';
+    $('errbox').textContent='⚠ '+e.message+'\n\nПеревір Database ID та чи запущений SiYuan.';
+    $('errbox').style.display='block';
+    setSt('err','Помилка');
+  });
+}
+
+function chipCls(v){var l=(v||'').toLowerCase();return l==='free'?'ok':l==='freemium'?'wrn':l==='paid'?'bad':''}
+function stripeClr(v){var l=(v||'').toLowerCase();return l==='free'?'#34d399':l==='freemium'?'#fbbf24':l==='paid'?'#f87171':'transparent'}
+
+function buildPills(){
+  var bar=$('pills');bar.innerHTML='';
+  var pf=CFG.pillField;if(!pf)return;
+  var vals={};
+  allRows.forEach(function(row){var v=gc(row,pf);if(Array.isArray(v))v.forEach(function(i){vals[String(i)]=1});else if(v!=null&&v!=='')vals[String(v)]=1});
+  var keys=Object.keys(vals).sort();if(!keys.length)return;
+  function mk(lbl,val){var b=document.createElement('button');b.className='pill'+(activePill===val?' on':'');b.textContent=lbl;b.dataset.v=val;b.onclick=function(){activePill=val;document.querySelectorAll('.pill').forEach(function(p){p.classList.toggle('on',p.dataset.v===val)});render()};return b}
+  bar.appendChild(mk('Усі','all'));keys.forEach(function(v){bar.appendChild(mk(v,v))});
+}
+
+function render(){
+  var q=searchQ.toLowerCase(),pf=CFG.pillField,fields=CFG.fields||[];
+  var primary=null,logoF=null,badgeFs=[],bodyFs=[];
+  fields.forEach(function(f){if(f.role==='primary')primary=f;else if(f.role==='logo')logoF=f;else if(f.badge&&f.visible)badgeFs.push(f);else if(f.visible&&f.role==='body')bodyFs.push(f)});
+
+  var visible=allRows.filter(function(row){
+    if(activePill!=='all'&&pf){var v=gc(row,pf);var hit=Array.isArray(v)?v.some(function(i){return String(i).toLowerCase()===activePill.toLowerCase()}):String(v||'').toLowerCase()===activePill.toLowerCase();if(!hit)return false}
+    if(q){var all='';Object.keys(row._c).forEach(function(k){all+=txt(row._c[k])+' '});if(all.toLowerCase().indexOf(q)===-1)return false}
+    return true;
+  });
+
+  $('cnt').textContent=visible.length+' / '+allRows.length;
+
+  $('grid').innerHTML=visible.map(function(row,i){
+    var pRaw=primary?gc(row,primary.colId):null,pText=txt(pRaw)||'(без назви)';
+    var pLink=(typeof pRaw==='object'&&pRaw&&pRaw.bid)?'siyuan://blocks/'+esc(pRaw.bid):(row._id?'siyuan://blocks/'+esc(row._id):null);
+    var titleHtml=pLink?'<a href="'+esc(pLink)+'">'+esc(pText)+'</a>':esc(pText);
+
+    var logoHtml='<span>'+esc((pText[0]||'?').toUpperCase())+'</span>';
+    if(logoF){var lu=txt(gc(row,logoF.colId));if(lu)logoHtml='<img src="'+esc(lu)+'" alt="" loading="lazy" onerror="this.parentNode.innerHTML=\'<span>'+esc((pText[0]||'?').toUpperCase())+'</span>\'">'}
+
+    var stripe='transparent';
+    var badgesHtml=badgeFs.map(function(f){var v=txt(gc(row,f.colId));if(!v)return'';if(stripe==='transparent')stripe=stripeClr(v);return'<span class="chip '+chipCls(v)+'">'+esc(v)+'</span>'}).join('');
+
+    var bodyHtml=bodyFs.map(function(f){
+      var col=null;for(var k=0;k<avCols.length;k++)if(avCols[k].id===f.colId){col=avCols[k];break}
+      return'<div class="fr"><span class="fk" title="'+esc(f.label||f.name)+'">'+esc(f.label||f.name)+'</span>'+rCell(gc(row,f.colId),col&&col.type,f.displayType)+'</div>';
+    }).join('');
+
+    return'<div class="card" style="animation-delay:'+(i*18)+'ms"><div class="cst" style="background:'+stripe+'"></div><div class="ch"><div class="clo">'+logoHtml+'</div><div style="flex:1;min-width:0"><div class="ctit">'+titleHtml+'</div><div class="cbg">'+badgesHtml+'</div></div></div><div class="cb">'+bodyHtml+'</div></div>';
+  }).join('');
+
+  autoH();
+}
+
+/* config */
+function openCfg(){
+  $('cId').value=CFG&&CFG.avid||'20260321102432-60ncqg7';
+  $('cTitle').value=CFG&&CFG.title||'';
+  $('cApi').value=CFG&&CFG.api||'http://127.0.0.1:6806';
+  $('cTok').value=CFG&&CFG.token||'';
+  $('cCols').value=CFG&&CFG.columns||3;$('colsv').textContent=CFG&&CFG.columns||3;
+  $('cLw').value=CFG&&CFG.labelWidth||80;
+  if(avCols.length){buildFldList();buildPillSel();rebuildRules()}
+  $('ov').classList.add('open');autoH();
+}
+function closeCfg(){$('ov').classList.remove('open');autoH()}
+
+$('btnCfg').onclick=openCfg;
+$('btnClose').onclick=$('btnCancel').onclick=closeCfg;
+$('cCols').oninput=function(e){$('colsv').textContent=e.target.value};
+
+$('btnFetch').onclick=function(){
+  var avid=$('cId').value.trim(),api=$('cApi').value.trim()||'http://127.0.0.1:6806',tok=$('cTok').value.trim();
+  if(!avid){$('fst').textContent='⚠ Введи Database ID';return}
+  $('fst').textContent='⏳ Завантаження…';
+  var h={'Content-Type':'application/json'};if(tok)h['Authorization']='Token '+tok;
+  fetch(api.replace(/\/$/,'')+'/api/av/renderAttributeView',{method:'POST',headers:h,body:JSON.stringify({id:avid,viewID:''})})
+  .then(function(r){return r.json()})
+  .then(function(j){
+    if(j.code!==0)throw new Error(j.msg);
+    avCols=parseAV(j.data).cols;
+    buildFldList();buildPillSel();rebuildRules();
+    $('fst').textContent='✓ '+avCols.length+' колонок завантажено';
+    autoH();
+  })
+  .catch(function(e){$('fst').textContent='⚠ '+e.message});
+};
+
+function buildFldList(){
+  var em={};(CFG&&CFG.fields||[]).forEach(function(f){em[f.colId]=f});
+  $('flist').innerHTML=avCols.map(function(col){
+    var ex=em[col.id]||{},role=ex.role||'body',disp=ex.displayType||'auto';
+    return'<div class="fi" data-cid="'+esc(col.id)+'" data-cn="'+esc(col.name)+'" data-ct="'+esc(col.type)+'">'+
+      '<span class="fi-n" title="'+esc(col.name)+'">'+esc(col.name)+'</span>'+
+      '<select class="frole"><option value="body"'+(role==='body'?' selected':'')+'>тіло</option><option value="primary"'+(role==='primary'?' selected':'')+'>🔑 заголовок</option><option value="logo"'+(role==='logo'?' selected':'')+'>🖼 логотип</option></select>'+
+      '<select class="fdisp">'+['auto','text','number','date','url','bool'].map(function(t){return'<option value="'+t+'"'+(disp===t?' selected':'')+'>'+t+'</option>'}).join('')+'</select>'+
+      '<span class="tog fbadge '+(ex.badge?'on':'')+'" title="badge">★</span>'+
+      '<span class="tog fvis '+(ex.visible!==false?'on':'')+'" title="показувати">👁</span>'+
+    '</div>';
+  }).join('');
+  $('flist').querySelectorAll('.fbadge,.fvis').forEach(function(s){s.onclick=function(){s.classList.toggle('on')}});
+}
+
+function collectFields(){return Array.from($('flist').querySelectorAll('.fi')).map(function(el){return{colId:el.dataset.cid,name:el.dataset.cn,label:el.dataset.cn,colType:el.dataset.ct,role:el.querySelector('.frole').value,displayType:el.querySelector('.fdisp').value,badge:el.querySelector('.fbadge').classList.contains('on'),visible:el.querySelector('.fvis').classList.contains('on')}})}
+
+function buildPillSel(){
+  $('cPill').innerHTML='<option value="">— немає —</option>'+avCols.filter(function(c){return c.type==='select'||c.type==='mSelect'}).map(function(c){return'<option value="'+esc(c.id)+'"'+(CFG&&CFG.pillField===c.id?' selected':'')+'>'+esc(c.name)+'</option>'}).join('');
+}
+
+var OPS=[['contains','містить'],['not_contains','не містить'],['eq','= рівно'],['neq','≠ не рівно'],['starts','починається з'],['ends','закінчується на'],['empty','порожнє'],['not_empty','не порожнє'],['gt','> більше'],['lt','< менше'],['checked','✓ відмічено'],['unchecked','☐ не відмічено']];
+function colOpts(){return avCols.map(function(c){return'<option value="'+esc(c.id)+'">'+esc(c.name)+'</option>'}).join('')}
+function addFRule(p){var d=document.createElement('div');d.className='rule';d.innerHTML='<select class="frc">'+colOpts()+'</select><select class="frop">'+OPS.map(function(o){return'<option value="'+o[0]+'">'+esc(o[1])+'</option>'}).join('')+'</select><input class="frv" type="text" placeholder="значення"><span class="x">✕</span>';if(p){d.querySelector('.frc').value=p.colId;d.querySelector('.frop').value=p.op;d.querySelector('.frv').value=p.value||''}d.querySelector('.x').onclick=function(){d.remove()};$('frules').appendChild(d)}
+function addSRule(p){var d=document.createElement('div');d.className='rule';d.innerHTML='<select class="src">'+colOpts()+'</select><select class="srdir"><option value="asc">↑ А→Я</option><option value="desc">↓ Я→А</option></select><span class="x">✕</span>';if(p){d.querySelector('.src').value=p.colId;d.querySelector('.srdir').value=p.dir}d.querySelector('.x').onclick=function(){d.remove()};$('srules').appendChild(d)}
+function rebuildRules(){$('frules').innerHTML='';$('srules').innerHTML='';(CFG&&CFG.filters||[]).forEach(addFRule);(CFG&&CFG.sorts||[]).forEach(addSRule)}
+function collectFilters(){return Array.from($('frules').querySelectorAll('.rule')).map(function(d){return{colId:d.querySelector('.frc').value,op:d.querySelector('.frop').value,value:d.querySelector('.frv').value}})}
+function collectSorts(){return Array.from($('srules').querySelectorAll('.rule')).map(function(d){return{colId:d.querySelector('.src').value,dir:d.querySelector('.srdir').value}})}
+
+$('btnAF').onclick=function(){addFRule();autoH()};
+$('btnAS').onclick=function(){addSRule();autoH()};
+
+$('btnSave').onclick=function(){
+  if(!avCols.length){alert('Спочатку натисни «↓ Колонки»');return}
+  CFG={avid:$('cId').value.trim(),title:$('cTitle').value||'AV Cards',api:$('cApi').value.trim(),token:$('cTok').value.trim(),columns:parseInt($('cCols').value)||3,labelWidth:parseInt($('cLw').value)||80,pillField:$('cPill').value,fields:collectFields(),filters:collectFilters(),sorts:collectSorts()};
+  ssave(CFG);closeCfg();activePill='all';loadData();
+};
+
+$('srch').oninput=function(e){searchQ=e.target.value;render()};
+
+if(window.ResizeObserver)new ResizeObserver(autoH).observe(document.body);
+
+(function(){
+  CFG=sload();
+  if(CFG&&CFG.avid){loadData()}
+  else{setSt('','Натисни ⚙ щоб налаштувати');$('sdot').className='dot';setTimeout(openCfg,150)}
+})();
+</script>
+</body>
+</html>

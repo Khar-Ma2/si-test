@@ -1,0 +1,15 @@
+{
+  "name": "database-cards-list",
+  "author": "KharMa",
+  "version": "0.0.3",
+  "minAppVersion": "2.8.8",
+  "displayName": {
+    "default": "Card for DB"
+  },
+  "description": {
+    "default": "Widget to show all DB entities as cards list"
+  },
+  "readme": {
+    "default": "README.md"
+  }
+}
