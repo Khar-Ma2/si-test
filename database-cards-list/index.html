@@ -627,7 +627,7 @@
         var titleHtml;
         if (pRaw && pRaw.bid) {
           var bid = pRaw.bid;
-          titleHtml = '<span class="ctitle" style="cursor:pointer" onclick="(function(){var a=window.parent.document.createElement(\'a\');a.href=\'siyuan://blocks/' + bid + '\';window.parent.document.body.appendChild(a);a.click();a.remove();})()">' + esc(pText) + '</span>';
+          titleHtml = '<span class="ctitle" style="cursor:pointer" onclick="window.parent.openFileByURL(\'siyuan://blocks/' + bid + '\')">' + esc(pText) + '</span>';
         } else {
           titleHtml = '<span class="ctitle">' + esc(pText) + '</span>';
         }
