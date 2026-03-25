@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>AI Tools</title>
   <style>
-    /* ... (стилі залишаються без змін) ... */
     *,
     *::before,
     *::after {
@@ -579,7 +578,7 @@
       </div>
       <div>
         <label>API URL</label>
-        <input id="ca" type="text" value="http://34.60.51.209:80">
+        <input id="ca" type="text" value="http://34.60.51.209">
       </div>
       <div>
         <label>Token (якщо є)</label>
@@ -593,7 +592,6 @@
   </div>
 
   <script>
-    /* ── (Скрипти завантаження та парсингу залишаються без змін) ── */
     var CLR = [{ bg: 'var(--bg2)', bd: 'var(--bd)', c: 'var(--m)' }, { bg: '#fef2f2', bd: '#fecaca', c: '#dc2626' }, { bg: '#fff7ed', bd: '#fed7aa', c: '#ea580c' }, { bg: '#fefce8', bd: '#fef08a', c: '#ca8a04' }, { bg: '#f0fdf4', bd: '#bbf7d0', c: '#16a34a' }, { bg: '#eff6ff', bd: '#bfdbfe', c: '#2563eb' }, { bg: '#f5f3ff', bd: '#ddd6fe', c: '#7c3aed' }, { bg: '#fdf2f8', bd: '#fbcfe8', c: '#be185d' }, { bg: '#f1f5f9', bd: '#cbd5e1', c: '#475569' }, { bg: '#1e293b', bd: '#475569', c: '#f1f5f9' }, { bg: '#fef3c7', bd: '#fde68a', c: '#92400e' }, { bg: '#ecfdf5', bd: '#a7f3d0', c: '#065f46' }, { bg: '#f0fdf4', bd: '#d9f99d', c: '#3f6212' }, { bg: '#fff1f2', bd: '#fecdd3', c: '#be123c' }];
     function clrStyle(v) { if (v == null) return CLR[0]; var n = parseInt(v, 10); if (!isNaN(n) && CLR[n]) return CLR[n]; var m = { red: 1, orange: 2, yellow: 3, green: 4, blue: 5, purple: 6, pink: 7, gray: 8, black: 9, brown: 10, teal: 11, lime: 12, rose: 13 }; return CLR[m[String(v).toLowerCase()] || 0] }
     var KEY = 'ait_' + location.pathname.replace(/\W/g, '_').slice(-18);
@@ -618,15 +616,90 @@
     function stripeColor(row) { var pRaw = F.pricing ? txt(gc(row, F.pricing.id)) : ''; var l = pRaw.toLowerCase(); return l === 'free' ? '#16a34a' : l === 'freemium' ? '#d97706' : l === 'paid' ? '#dc2626' : 'transparent' }
     function gc(row, id) { return row._c && row._c[id] != null ? row._c[id] : null }
     function render() {
-      var rows = allRows.filter(function (row) { if (searchQ) { var all = ''; Object.keys(row._c).forEach(function (k) { all += txt(row._c[k]) + ' ' }); if (all.toLowerCase().indexOf(searchQ) === -1) return false } if (activeType.length) { var v = gc(row, F.type ? F.type.id : ''); var vals = Array.isArray(v) ? v : [txt(v)]; var hit = activeType.some(function (t) { return vals.some(function (rv) { return String(rv).toLowerCase() === t.toLowerCase() }) }); if (!hit) return false } if (activeProfile.length) { var v2 = gc(row, F.profile ? F.profile.id : ''); var vals2 = Array.isArray(v2) ? v2 : [txt(v2)]; var hit2 = activeProfile.some(function (t) { return vals2.some(function (rv) { return String(rv).toLowerCase() === t.toLowerCase() }) }); if (!hit2) return false } return true }); $('cnt').textContent = rows.length + ' / ' + allRows.length; if (!rows.length) { $('grid').innerHTML = '<div style="color:var(--d);font-size:12px;padding:16px 0">Нічого не знайдено</div>'; autoH(); return } var optMaps = {};['type', 'ai', 'pricing', 'checked', 'profile'].forEach(function (k) { if (F[k]) optMaps[k] = buildOptMap(F[k]) }); $('grid').innerHTML = rows.map(function (row, i) {
-        var pRaw = F.primary ? gc(row, F.primary.id) : null; var pText = txt(pRaw) || '(без назви)'; var pLink = (typeof pRaw === 'object' && pRaw && pRaw.bid)
-          ? window.location.origin + '/stage/build/desktop/?id=' + pRaw.bid : null; var titleHtml = pLink
-            ? '<a class="ctitle" href="' + esc(pLink) + '" target="_top">' + esc(pText) + '</a>'
-            : '<span class="ctitle">' + esc(pText) + '</span>'; var logoUrl = F.logo ? txt(gc(row, F.logo.id)) : ''; var initials = esc((pText[0] || '?').toUpperCase()); var logoHtml = logoUrl ? '<img src="' + esc(logoUrl) + '" alt="" loading="lazy" onerror="this.parentNode.innerHTML=\'<span>' + initials + '</span>\'">' : '<span>' + initials + '</span>'; var statusHtml = ''; if (F.checked) { var chRaw = gc(row, F.checked.id); if (chRaw != null && chRaw !== '') { var items = Array.isArray(chRaw) ? chRaw : [txt(chRaw)]; statusHtml = items.map(function (v) { return chipHtml(String(v), optMaps.checked || {}) }).join('') } } var params = []; if (F.type) params.push({ label: 'Тип', raw: gc(row, F.type.id), om: optMaps.type }); if (F.ai) params.push({ label: 'AI', raw: gc(row, F.ai.id), om: optMaps.ai }); if (F.pricing) params.push({ label: 'Ціноутворення', raw: gc(row, F.pricing.id), om: optMaps.pricing }); if (F.profile) params.push({ label: 'Профіль', raw: gc(row, F.profile.id), om: optMaps.profile }); var paramsHtml = ''; if (params.length) { paramsHtml = '<div class="cparams">'; params.forEach(function (p) { paramsHtml += '<div class="cparam"><div class="cpk">' + esc(p.label) + '</div><div class="cpv">' + renderChips(p.raw, p.om) + '</div></div>' }); paramsHtml += '</div>' } var urlHtml = ''; if (F.url) { var urlRaw = txt(gc(row, F.url.id)); if (urlRaw) { var urlDisp = urlRaw.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, ''); urlHtml = '<div class="curl"><a href="' + esc(urlRaw) + '" target="_blank" rel="noopener">' + esc(urlDisp) + '</a></div>' } } var textsHtml = '', hasTexts = false, textsBuf = ''; if (F.desc) { var dv = txt(gc(row, F.desc.id)); if (dv) { hasTexts = true; textsBuf += '<div class="ctf"><div class="ctf-lbl">Опис</div>' + esc(dv) + '</div>' } } if (F.features) { var fv = txt(gc(row, F.features.id)); if (fv) { hasTexts = true; textsBuf += '<div class="ctf"><div class="ctf-lbl">Особливості</div>' + esc(fv) + '</div>' } } if (hasTexts) textsHtml = '<div class="ctexts">' + textsBuf + '</div>'; var stripe = stripeColor(row); return '<div class="card" style="animation-delay:' + (i * 12) + 'ms"><div class="cstr" style="background:' + stripe + '"></div><div class="ch"><div class="clogo">' + logoHtml + '</div><div class="chtxt">' + titleHtml + (statusHtml ? '<div class="cstatus">' + statusHtml + '</div>' : '') + '</div></div>' + paramsHtml + urlHtml + textsHtml + '</div>'
-      }).join(''); autoH()
+      var rows = allRows.filter(function (row) { if (searchQ) { var all = ''; Object.keys(row._c).forEach(function (k) { all += txt(row._c[k]) + ' ' }); if (all.toLowerCase().indexOf(searchQ) === -1) return false } if (activeType.length) { var v = gc(row, F.type ? F.type.id : ''); var vals = Array.isArray(v) ? v : [txt(v)]; var hit = activeType.some(function (t) { return vals.some(function (rv) { return String(rv).toLowerCase() === t.toLowerCase() }) }); if (!hit) return false } if (activeProfile.length) { var v2 = gc(row, F.profile ? F.profile.id : ''); var vals2 = Array.isArray(v2) ? v2 : [txt(v2)]; var hit2 = activeProfile.some(function (t) { return vals2.some(function (rv) { return String(rv).toLowerCase() === t.toLowerCase() }) }); if (!hit2) return false } return true });
+      $('cnt').textContent = rows.length + ' / ' + allRows.length;
+      if (!rows.length) { $('grid').innerHTML = '<div style="color:var(--d);font-size:12px;padding:16px 0">Нічого не знайдено</div>'; autoH(); return }
+      var optMaps = {};
+      ['type', 'ai', 'pricing', 'checked', 'profile'].forEach(function (k) { if (F[k]) optMaps[k] = buildOptMap(F[k]) });
+      $('grid').innerHTML = rows.map(function (row, i) {
+        var pRaw = F.primary ? gc(row, F.primary.id) : null;
+        var pText = txt(pRaw) || '(без назви)';
+        var titleHtml;
+        if (pRaw && pRaw.bid) {
+          var bid = pRaw.bid;
+          titleHtml = '<span class="ctitle" style="cursor:pointer" onclick="(function(){var a=window.parent.document.createElement(\'a\');a.href=\'siyuan://blocks/' + bid + '\';window.parent.document.body.appendChild(a);a.click();a.remove();})()">' + esc(pText) + '</span>';
+        } else {
+          titleHtml = '<span class="ctitle">' + esc(pText) + '</span>';
+        }
+        var logoUrl = F.logo ? txt(gc(row, F.logo.id)) : '';
+        var initials = esc((pText[0] || '?').toUpperCase());
+        var logoHtml = logoUrl ? '<img src="' + esc(logoUrl) + '" alt="" loading="lazy" onerror="this.parentNode.innerHTML=\'<span>' + initials + '</span>\'">' : '<span>' + initials + '</span>';
+        var statusHtml = '';
+        if (F.checked) { var chRaw = gc(row, F.checked.id); if (chRaw != null && chRaw !== '') { var items = Array.isArray(chRaw) ? chRaw : [txt(chRaw)]; statusHtml = items.map(function (v) { return chipHtml(String(v), optMaps.checked || {}) }).join('') } }
+        var params = [];
+        if (F.type) params.push({ label: 'Тип', raw: gc(row, F.type.id), om: optMaps.type });
+        if (F.ai) params.push({ label: 'AI', raw: gc(row, F.ai.id), om: optMaps.ai });
+        if (F.pricing) params.push({ label: 'Ціноутворення', raw: gc(row, F.pricing.id), om: optMaps.pricing });
+        if (F.profile) params.push({ label: 'Профіль', raw: gc(row, F.profile.id), om: optMaps.profile });
+        var paramsHtml = '';
+        if (params.length) { paramsHtml = '<div class="cparams">'; params.forEach(function (p) { paramsHtml += '<div class="cparam"><div class="cpk">' + esc(p.label) + '</div><div class="cpv">' + renderChips(p.raw, p.om) + '</div></div>' }); paramsHtml += '</div>' }
+        var urlHtml = '';
+        if (F.url) { var urlRaw = txt(gc(row, F.url.id)); if (urlRaw) { var urlDisp = urlRaw.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, ''); urlHtml = '<div class="curl"><a href="' + esc(urlRaw) + '" target="_blank" rel="noopener">' + esc(urlDisp) + '</a></div>' } }
+        var textsHtml = '', hasTexts = false, textsBuf = '';
+        if (F.desc) { var dv = txt(gc(row, F.desc.id)); if (dv) { hasTexts = true; textsBuf += '<div class="ctf"><div class="ctf-lbl">Опис</div>' + esc(dv) + '</div>' } }
+        if (F.features) { var fv = txt(gc(row, F.features.id)); if (fv) { hasTexts = true; textsBuf += '<div class="ctf"><div class="ctf-lbl">Особливості</div>' + esc(fv) + '</div>' } }
+        if (hasTexts) textsHtml = '<div class="ctexts">' + textsBuf + '</div>';
+        var stripe = stripeColor(row);
+        return '<div class="card" style="animation-delay:' + (i * 12) + 'ms"><div class="cstr" style="background:' + stripe + '"></div><div class="ch"><div class="clogo">' + logoHtml + '</div><div class="chtxt">' + titleHtml + (statusHtml ? '<div class="cstatus">' + statusHtml + '</div>' : '') + '</div></div>' + paramsHtml + urlHtml + textsHtml + '</div>'
+      }).join('');
+      autoH()
     }
-    function showSkel(n) { var gc = parseInt($('cols-range').value) || 3; var h = ''; for (var i = 0; i < Math.max(n, gc); i++)h += '<div class="sk"><div style="display:flex;gap:8px;align-items:center"><div class="sl" style="width:32px;height:32px;border-radius:6px;flex-shrink:0"></div><div style="flex:1;display:flex;flex-direction:column;gap:4px"><div class="sl" style="height:12px;width:60%"></div><div class="sl" style="height:9px;width:35%"></div></div></div><div style="display:flex;gap:4px;margin-top:4px"><div class="sl" style="height:9px;flex:1"></div><div class="sl" style="height:9px;flex:1"></div><div class="sl" style="height:9px;flex:1"></div></div><div class="sl" style="height:9px;margin-top:4px;width:55%"></div></div>'; $('grid').innerHTML = h }
-    function loadData() { if (!CFG || !CFG.avid) return; setSt('sp', 'Завантаження…'); showSkel(parseInt($('cols-range').value) || 3); $('eb').style.display = 'none'; fetch(getApi() + '/api/av/renderAttributeView', { method: 'POST', headers: mkH(), body: JSON.stringify({ id: CFG.avid, viewID: '' }) }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json() }).then(function (j) { if (j.code !== 0) throw new Error(j.msg || 'code ' + j.code); var p = parseAV(j.data); avCols = p.cols; F.primary = findCol(['primary key', 'title', 'name', 'назва']); F.type = findCol(['type', 'тип']); F.ai = findCol(['ai']); F.pricing = findCol(['pricing', 'ціна', 'price']); F.checked = findCol(['checked', 'статус', 'status']); F.profile = findCol(['profile', 'профіль']); F.desc = findCol(['short description', 'description', 'опис']); F.features = findCol(['unique features', 'features', 'особливості']); F.url = findCol(['url', 'посилання', 'link']); F.logo = findCol(['logo url', 'logo', 'лого']); optMapType = buildOptMap(F.type); optMapProfile = buildOptMap(F.profile); allRows = p.rows.map(function (row) { var o = { _id: row.id, _c: {} }; avCols.forEach(function (col, i) { var cell = Array.isArray(row.cells) ? row.cells[i] : (row.cells && row.cells[col.id] != null ? row.cells[col.id] : null); o._c[col.id] = cellRaw(cell) }); return o }); buildPills('pills-type', F.type, activeType, optMapType); buildPills('pills-profile', F.profile, activeProfile, optMapProfile); render(); setSt('ok', allRows.length + ' інструментів') }).catch(function (e) { $('grid').innerHTML = ''; $('eb').textContent = '⚠ ' + e.message + '\n\nПеревір Database ID та чи запущений SiYuan.'; $('eb').style.display = 'block'; setSt('er', 'Помилка'); autoH() }) }
+    function showSkel(n) { var gc = parseInt($('cols-range').value) || 3; var h = ''; for (var i = 0; i < Math.max(n, gc); i++) h += '<div class="sk"><div style="display:flex;gap:8px;align-items:center"><div class="sl" style="width:32px;height:32px;border-radius:6px;flex-shrink:0"></div><div style="flex:1;display:flex;flex-direction:column;gap:4px"><div class="sl" style="height:12px;width:60%"></div><div class="sl" style="height:9px;width:35%"></div></div></div><div style="display:flex;gap:4px;margin-top:4px"><div class="sl" style="height:9px;flex:1"></div><div class="sl" style="height:9px;flex:1"></div><div class="sl" style="height:9px;flex:1"></div></div><div class="sl" style="height:9px;margin-top:4px;width:55%"></div></div>'; $('grid').innerHTML = h }
+    function loadData() {
+      if (!CFG || !CFG.avid) return;
+      setSt('sp', 'Завантаження…');
+      showSkel(parseInt($('cols-range').value) || 3);
+      $('eb').style.display = 'none';
+      fetch(getApi() + '/api/av/renderAttributeView', { method: 'POST', headers: mkH(), body: JSON.stringify({ id: CFG.avid, viewID: '' }) })
+        .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json() })
+        .then(function (j) {
+          if (j.code !== 0) throw new Error(j.msg || 'code ' + j.code);
+          var p = parseAV(j.data);
+          avCols = p.cols;
+          F.primary = findCol(['primary key', 'title', 'name', 'назва']);
+          F.type = findCol(['type', 'тип']);
+          F.ai = findCol(['ai']);
+          F.pricing = findCol(['pricing', 'ціна', 'price']);
+          F.checked = findCol(['checked', 'статус', 'status']);
+          F.profile = findCol(['profile', 'профіль']);
+          F.desc = findCol(['short description', 'description', 'опис']);
+          F.features = findCol(['unique features', 'features', 'особливості']);
+          F.url = findCol(['url', 'посилання', 'link']);
+          F.logo = findCol(['logo url', 'logo', 'лого']);
+          optMapType = buildOptMap(F.type);
+          optMapProfile = buildOptMap(F.profile);
+          allRows = p.rows.map(function (row) {
+            var o = { _id: row.id, _c: {} };
+            avCols.forEach(function (col, i) {
+              var cell = Array.isArray(row.cells) ? row.cells[i] : (row.cells && row.cells[col.id] != null ? row.cells[col.id] : null);
+              o._c[col.id] = cellRaw(cell)
+            });
+            return o
+          });
+          buildPills('pills-type', F.type, activeType, optMapType);
+          buildPills('pills-profile', F.profile, activeProfile, optMapProfile);
+          render();
+          setSt('ok', allRows.length + ' інструментів')
+        })
+        .catch(function (e) {
+          $('grid').innerHTML = '';
+          $('eb').textContent = '⚠ ' + e.message + '\n\nПеревір Database ID та чи запущений SiYuan.';
+          $('eb').style.display = 'block';
+          setSt('er', 'Помилка');
+          autoH()
+        })
+    }
+
     $('cols-range').oninput = function () { var v = this.value; $('cols-val').textContent = v; $('grid').style.setProperty('--gc', v); autoH() };
     $('srch').oninput = function () { searchQ = this.value.toLowerCase().trim(); render() };
     $('srch').onfocus = function () { this.style.borderColor = 'var(--acc)' };
@@ -634,22 +707,27 @@
     $('gear-btn').onclick = function () { $('ci').value = CFG && CFG.avid || ''; $('ca').value = CFG && CFG.api || 'http://34.60.51.209'; $('ct').value = CFG && CFG.token || ''; $('cfg').classList.add('open'); autoH() };
     $('ccancel').onclick = function () { $('cfg').classList.remove('open'); autoH() };
     $('cfg').onclick = function (e) { if (e.target === $('cfg')) $('cfg').classList.remove('open') };
-    $('csave').onclick = function () { var avid = $('ci').value.trim(); if (!avid) { alert('Введи Database ID'); return } CFG = { avid: avid, api: $('ca').value.trim() || 'http://34.60.51.209', token: $('ct').value.trim() }; ss(CFG); $('cfg').classList.remove('open'); activeType = []; activeProfile = []; loadData() };
+    $('csave').onclick = function () {
+      var avid = $('ci').value.trim();
+      if (!avid) { alert('Введи Database ID'); return }
+      CFG = { avid: avid, api: $('ca').value.trim() || window.location.origin, token: $('ct').value.trim() };
+      ss(CFG);
+      $('cfg').classList.remove('open');
+      activeType = [];
+      activeProfile = [];
+      loadData()
+    };
 
     /* ── init ── */
     if (window.ResizeObserver) new ResizeObserver(autoH).observe(document.body);
 
     (function () {
-      // HARDCODED VALUES — Оновлюй тут, якщо зміниться IP
       var hardcoded = {
         avid: "20260325082606-ri5arww",
         api: "http://34.60.51.209",
-        token: "admin1252"
+        token: ""
       };
-
-      // Пріоритет: localStorage, якщо порожньо — хардкод
       CFG = sl() || hardcoded;
-
       if (CFG && CFG.avid) {
         loadData();
       } else {
